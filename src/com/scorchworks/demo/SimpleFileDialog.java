@@ -38,6 +38,7 @@ import android.content.DialogInterface.OnClickListener;
 //import android.content.DialogInterface.OnKeyListener;
 import android.os.Environment;
 import android.text.Editable;
+import android.util.Log;
 import android.view.Gravity;
 //import android.view.KeyEvent;
 import android.view.View;
@@ -52,22 +53,23 @@ import android.widget.Toast;
 
 public class SimpleFileDialog 
 {
-	private int FileOpen     = 0;
-	private int FileSave     = 1;
-	private int FolderChoose = 2;
+	private static final int FileOpen     = 0;
+	private static final int FileSave     = 1;
+	private static final int FolderChoose = 2;
 	private int Select_type = FileSave;
 	private String m_sdcardDirectory = "";
 	private Context m_context;
 	private TextView m_titleView1;
 	private TextView m_titleView;
-	public String Default_File_Name = "default.txt";
-	private String Selected_File_Name = Default_File_Name;
+	public String default_file_name = "default.txt";
+	private String selected_file_name = default_file_name;
 	private EditText input_text;
 	
 	private String m_dir = "";
 	private List<String> m_subdirs = null;
 	private SimpleFileDialogListener m_SimpleFileDialogListener = null;
 	private ArrayAdapter<String> m_listAdapter = null;
+	private boolean m_goToUpper = false;
 
 	//////////////////////////////////////////////////////
 	// Callback interface for selected directory
@@ -79,9 +81,12 @@ public class SimpleFileDialog
 
 	public SimpleFileDialog(Context context, String file_select_type, SimpleFileDialogListener SimpleFileDialogListener)
 	{
-		if (file_select_type.equals("FileOpen"))          Select_type = FileOpen;
-		else if (file_select_type.equals("FileSave"))     Select_type = FileSave;
-		else if (file_select_type.equals("FolderChoose")) Select_type = FolderChoose;
+		if (file_select_type.equals("FileOpen"))             {Select_type = FileOpen;}
+		else if (file_select_type.equals("FileSave"))       {Select_type = FileSave;}
+		else if (file_select_type.equals("FolderChoose"))   {Select_type = FolderChoose;}
+		else if (file_select_type.equals("FileOpen.."))     {Select_type = FileOpen; m_goToUpper = true;}
+		else if (file_select_type.equals("FileSave.."))     {Select_type = FileSave; m_goToUpper = true;}
+		else if (file_select_type.equals("FolderChoose..")) {Select_type = FolderChoose; m_goToUpper = true;}
 		else Select_type = FileOpen;
 		
 		m_context = context;
@@ -115,11 +120,14 @@ public class SimpleFileDialog
 	public void chooseFile_or_Dir(String dir)
 	{
 		File dirFile = new File(dir);
-		if (! dirFile.exists() || ! dirFile.isDirectory())
+		while (! dirFile.exists() || ! dirFile.isDirectory())
 		{
-			dir = m_sdcardDirectory;
+			dir = dirFile.getParent();
+			dirFile = new File(dir);
+Log.d("~~~~~","dir="+dir);
 		}
-
+Log.d("~~~~~","dir="+dir);
+		//m_sdcardDirectory
 		try
 		{
 			dir = new File(dir).getCanonicalPath();
@@ -144,17 +152,20 @@ public class SimpleFileDialog
 				if (sel.equals(".."))
 				{
 					   m_dir = m_dir.substring(0, m_dir.lastIndexOf("/"));
+					   if("".equals(m_dir)) {
+						   m_dir = "/";
+					   }
 				}
 				else
 				{
 					   m_dir += "/" + sel;
 				}
-				Selected_File_Name = Default_File_Name;
+				selected_file_name = default_file_name;
 				
 				if ((new File(m_dir).isFile())) // If the selection is a regular file
 				{
 					m_dir = m_dir_old;
-					Selected_File_Name = sel;
+					selected_file_name = sel;
 				}
 				
 				updateDirectory();
@@ -175,8 +186,8 @@ public class SimpleFileDialog
 					{
 						if (Select_type == FileOpen || Select_type == FileSave)
 						{
-							Selected_File_Name= input_text.getText() +"";
-							m_SimpleFileDialogListener.onChosenDir(m_dir + "/" + Selected_File_Name);}
+							selected_file_name= input_text.getText() +"";
+							m_SimpleFileDialogListener.onChosenDir(m_dir + "/" + selected_file_name);}
 						else
 						{
 							m_SimpleFileDialogListener.onChosenDir(m_dir);
@@ -207,8 +218,12 @@ public class SimpleFileDialog
 			File dirFile = new File(dir);
 			
 			// if directory is not the base sd card directory add ".." for going up one directory
-			if (! m_dir.equals(m_sdcardDirectory) ) dirs.add("..");
-			
+			if ((m_goToUpper || ! m_dir.equals(m_sdcardDirectory) )
+			  && !"/".equals(m_dir)
+			   ) {
+				dirs.add("..");
+			}
+Log.d("~~~~","m_dir="+m_dir);			
 			if (! dirFile.exists() || ! dirFile.isDirectory())
 			{
 				return dirs;
@@ -332,7 +347,7 @@ public class SimpleFileDialog
 		if (Select_type == FileOpen || Select_type == FileSave)
 		{
 			input_text = new EditText(m_context);
-			input_text.setText(Default_File_Name);
+			input_text.setText(default_file_name);
 			titleLayout.addView(input_text);
 		}
 		//////////////////////////////////////////
@@ -355,7 +370,7 @@ public class SimpleFileDialog
 		//#scorch
 		if (Select_type == FileSave || Select_type == FileOpen)
 		{
-			input_text.setText(Selected_File_Name);
+			input_text.setText(selected_file_name);
 		}
 	}
 
