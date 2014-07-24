@@ -41,9 +41,10 @@ And remember
 Dialog modes
 ------------
 
-"FileOpen" -- open an existing file
-"FileSave" -- save to a file
-"FolderChoose" -- choose a folder
-"FileOpen.." -- open an existing file, can cd .. from the starting directory
-"FileSave.." -- save to a file, can cd .. from the starting directory
-"FolderChoose.." -- choose a folder, can cd .. from the starting directory
+    "FileOpen" -- open an existing file
+    "FileSave" -- save to a file
+    "FolderChoose" -- choose a folder
+    "FileOpen.." -- open an existing file, can cd .. from the starting directory
+    "FileSave.." -- save to a file, can cd .. from the starting directory
+    "FolderChoose.." -- choose a folder, can cd .. from the starting directory
+
